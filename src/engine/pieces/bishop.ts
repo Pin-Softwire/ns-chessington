@@ -3,6 +3,7 @@ import Player from '../player';
 import Board from '../board';
 import Square from '../square';
 import GameSettings from '../gameSettings';
+import King from './king';
 
 export default class Bishop extends Piece {
     public constructor(player: Player) {
@@ -25,7 +26,17 @@ export default class Bishop extends Piece {
             let col = currSquare.col + direction.colStep;
 
             while (row >= 0 && row < GameSettings.BOARD_SIZE && col >= 0 && col < GameSettings.BOARD_SIZE) {
-                availableMoves.push(new Square(row, col));
+                const square = new Square(row, col);
+                const occupyingPiece = board.getPiece(square);
+
+                if (occupyingPiece) {
+                    if (occupyingPiece.player !== this.player && !(occupyingPiece instanceof King)) {
+                        availableMoves.push(square);
+                    }
+                    break;
+                }
+
+                availableMoves.push(square);
                 row += direction.rowStep;
                 col += direction.colStep;
             }

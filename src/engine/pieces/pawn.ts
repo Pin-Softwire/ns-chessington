@@ -2,6 +2,8 @@ import Piece from './piece';
 import Player from '../player';
 import Board from '../board';
 import Square from '../square'
+import GameSettings from '../gameSettings';
+import King from './king';
 
 export default class Pawn extends Piece {
 
@@ -15,25 +17,40 @@ export default class Pawn extends Piece {
 
     public getAvailableMoves(board: Board) {
 
-        if (this.player === Player.BLACK) {
-            const currSquare: Square = board.findPiece(this);
-            const availableMoves: Square[] = new Array();
-            if (currSquare.row === this.blackStartingRow) {
-                availableMoves.push(new Square(currSquare.row - 2, currSquare.col))
-            }
-            availableMoves.push(new Square(currSquare.row - 1, currSquare.col));
-            return availableMoves;
+        const direction = this.player === Player.BLACK ? -1 : 1;
+        const startingRow = this.player === Player.BLACK ? this.blackStartingRow : this.whiteStartingRow;
 
+        const currSquare: Square = board.findPiece(this);
+        const availableMoves: Square[] = new Array();
 
-        } else {
-            const currSquare: Square = board.findPiece(this);
-            const availableMoves: Square[] = new Array();
-            if (currSquare.row === this.whiteStartingRow) {
-                availableMoves.push(new Square(currSquare.row + 2, currSquare.col))
-            }
-            availableMoves.push(new Square(currSquare.row + 1, currSquare.col));
+        const oneSquareAhead = new Square(currSquare.row + direction, currSquare.col);
+        if (oneSquareAhead.row < 0 || oneSquareAhead.row >= GameSettings.BOARD_SIZE) {
             return availableMoves;
-            
         }
+
+        if (!board.getPiece(oneSquareAhead)) {
+            availableMoves.push(oneSquareAhead);
+
+            const twoSquaresAhead = new Square(currSquare.row + (direction * 2), currSquare.col);
+            if (currSquare.row === startingRow && !board.getPiece(twoSquaresAhead)) {
+                availableMoves.push(twoSquaresAhead);
+            }
+        }
+
+        const diagonalCols = [currSquare.col - 1, currSquare.col + 1];
+        for (const col of diagonalCols) {
+            if (col < 0 || col >= GameSettings.BOARD_SIZE) {
+                continue;
+            }
+
+            const diagonalSquare = new Square(currSquare.row + direction, col);
+            const occupyingPiece = board.getPiece(diagonalSquare);
+
+            if (occupyingPiece && occupyingPiece.player !== this.player && !(occupyingPiece instanceof King)) {
+                availableMoves.push(diagonalSquare);
+            }
+        }
+
+        return availableMoves;
     }
 }
